@@ -1,0 +1,160 @@
+%%
+%% 研究報告用スイッチ
+%% [techrep]
+%%
+%% 欧文表記無しのスイッチ(etitle,eabstractは任意)
+%% [noauthor]
+%%
+
+%\documentclass[submit,techrep]{ipsj}
+%\documentclass[submit,techrep,noauthor]{ipsj}
+\documentclass[submit,techrep]{ipsj}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{textcomp}
+\usepackage{latexsym}
+\usepackage{listings}
+\usepackage{url}
+\usepackage{xcolor}
+\def\newblock{\ }%
+
+\renewcommand{\floatpagefraction}{.8}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{latexsym}
+
+\def\Underline{\setbox0\hbox\bgroup\let\\\endUnderline}
+\def\endUnderline{\vphantom{y}\egroup\smash{\underline{\box0}}\\}
+\def\|{\verb|}
+%
+
+\newcommand{\reffig}[1]{図\ref{#1}}
+\newcommand{\reftab}[1]{表\ref{#1}}
+
+
+\newcommand{\epsfig}[4]{
+\begin{figure}[tb]
+  \begin{center}
+    \includegraphics[#2]{#1}
+  \end{center}
+  \caption{#3}
+  \label{#4}
+\end{figure}}
+
+\newcommand{\epsfigfull}[4]{
+\begin{figure*}[t]
+  \begin{center}
+    \includegraphics[#2]{#1}
+  \end{center}
+  \caption{#3}
+  \label{#4}
+\end{figure*}}
+
+%\setcounter{巻数}{59}%vol59=2018
+%\setcounter{号数}{10}
+%\setcounter{page}{1}
+
+
+\begin{document}
+
+\title{パブリックコンテナサービスを用いた\\超分散テストベッドの構築}
+
+\etitle{}
+
+\affiliate{aist}{産業技術総合研究所\\
+National Institute of Advanced Industrial Science and Technology}
+
+\affiliate{utsukuba}{筑波大学\\University of Tsukuba}
+
+\author{董 允治}{Yunzhi Dong}{utsukuba,aist}[]
+\author{中田 秀基}{Hidemoto Nakada}{aist,utsukuba}[hide-nakada@aist.go.jp]
+\author{谷村 勇輔}{Yusuke Tanimura}{aist,utsukuba}[yusuke.tanimura@aist.go.jp]
+
+
+\begin{abstract}
+  IoTセンサの普及に伴いセンサデータの爆発的増大が想定される。このような環境では
+  エッジにおいて前処理を行うことでデータ量を低減するとともにクラウドでの処理を軽
+  減するアプローチが有効であると考えられる。このような環境で動作するミドルウェア
+  の負荷に対する特性を評価するには大規模なテストベッドが必要だが、実機でこのよう
+  なテストベッドを用意するのはさまざまな観点から現実的ではない。我々はクラウド上
+  のコンテナサービスを利用することで、テストベッドを構築方法を提案する。オーケス
+  トレーションサービスを用いることで容易に短時間で大規模なテスト環境を構築できる
+  ことを確認した。
+\end{abstract}
+
+\begin{jkeyword}
+  Kuberanetes
+\end{jkeyword}
+
+\begin{eabstract}
+
+\end{eabstract}
+
+\begin{ekeyword}
+  Kuberanetes
+\end{ekeyword}
+
+\maketitle
+
+%1
+\section{はじめに}
+
+本稿の構成は以下のとおりである。
+
+\section{背景}\label{sec:background}
+
+\cite{MQTT}
+
+
+
+
+
+
+
+\section{おわりに}\label{sec:conclusion}
+
+
+今後の課題としては、以下が挙げられる。
+\begin{itemize}
+  \item hoge
+\end{itemize}
+
+
+
+\begin{acknowledgment}
+
+\end{acknowledgment}
+
+
+\bibliographystyle{ipsjunsrt}
+\bibliography{citation}
+
+\end{document}
+
+
