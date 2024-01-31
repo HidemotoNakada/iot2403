@@ -1,6 +1,40 @@
 \begin{thebibliography}{1}
 
+\bibitem{tou-os}
+董　允治，中田秀基，谷村勇輔\：ネットワークエッジを活用したデータ収集システムに向けたMQTTの性能計測，情報処理学会研究報告，Vol.~2022-OS-158(12)
+  (2023).
+
+\bibitem{grid5000}
+Cappello, F., Caron, E., Dayde, M., Desprez, F., Jegou, Y., Primet, P.,
+  Jeannot, E., Lanteri, S., Leduc, J., Melab, N., Mornet, G., Namyst, R.,
+  Quetier, B. and Richard, O.: Grid'5000: a large scale and highly
+  reconfigurable grid experimental testbed, {\em The 6th IEEE/ACM International
+  Workshop on Grid Computing, 2005.}, pp.\ 8 pp.-- (2005).
+
+\bibitem{simgrid}
+Casanova, H., Giersch, A., Legrand, A., Quinson, M. and Suter, F.: Versatile,
+  Scalable, and Accurate Simulation of Distributed Applications and Platforms,
+  {\em Journal of Parallel and Distributed Computing},  Vol.~74, No.~10, pp.\
+  2899--2917 (online), \urle{http://hal.inria.fr/hal-01017319} (2014).
+
+\bibitem{tou-hpc}
+董　允治，中田秀基，谷村勇輔\：ネットワークエッジを活用した大規模データ収集システムのテスト環境構築と最適化の検討，情報処理学会研究報告，Vol.~2022-HPC-191(11)
+  (2023).
+
 \bibitem{MQTT}
 : MQTT: The Standard for IoT Messaging, \url{https://mqtt.org/}.
+
+\bibitem{k8s}
+: {Production-Grade Container Orchestration}, \url{https://kubernetes.io/}.
+
+\bibitem{EKS}
+: {Amazon Elastic Kubernetes Service}, \url{https://aws.amazon.com/eks/}.
+
+\bibitem{aks}
+: {Azure Kubernetes Service (AKS)},
+  \url{https://azure.microsoft.com/en-us/products/kubernetes-service/}.
+
+\bibitem{fargate}
+: AWS Fargate, \url{https://aws.amazon.com/fargate/}.
 
 \end{thebibliography}

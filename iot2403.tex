@@ -80,12 +80,14 @@
 %\setcounter{号数}{10}
 %\setcounter{page}{1}
 
+\newcommand{\kbs}{Kubernates}
 
 \begin{document}
 
 \title{パブリックコンテナサービスを用いた\\超分散テストベッドの構築}
 
-\etitle{}
+\etitle{A Prototype Implementation of Computing Continuum Testbed \\
+using Public Cloud Container Service}
 
 \affiliate{aist}{産業技術総合研究所\\
 National Institute of Advanced Industrial Science and Technology}
@@ -102,22 +104,31 @@ National Institute of Advanced Industrial Science and Technology}
   エッジにおいて前処理を行うことでデータ量を低減するとともにクラウドでの処理を軽
   減するアプローチが有効であると考えられる。このような環境で動作するミドルウェア
   の負荷に対する特性を評価するには大規模なテストベッドが必要だが、実機でこのよう
+  なテストベッドを用意するのはさまざまな観点から現実的ではない。
+  シミュレータを使用する方法も考えられるが、各モジュールへの負荷を検証することは
+  できない。
+  我々はクラウド上のコンテナサービスを利用することで、テストベッドを
+  構築する方法を提案する。オーケストレーションサービスを用いることで
+  容易に短時間で大規模なテスト環境を構築できることを確認した。
+\end{abstract}
+
+\begin{jkeyword}
+  Kuberanetes, パブリッククラウド, 大規模テストベッド
+\end{jkeyword}
+
+\begin{eabstract}
+  IoTセンサの普及に伴いセンサデータの爆発的増大が想定される。このような環境では
+  エッジにおいて前処理を行うことでデータ量を低減するとともにクラウドでの処理を軽
+  減するアプローチが有効であると考えられる。このような環境で動作するミドルウェア
+  の負荷に対する特性を評価するには大規模なテストベッドが必要だが、実機でこのよう
   なテストベッドを用意するのはさまざまな観点から現実的ではない。我々はクラウド上
   のコンテナサービスを利用することで、テストベッドを構築する方法を提案する。オーケス
   トレーションサービスを用いることで容易に短時間で大規模なテスト環境を構築できる
   ことを確認した。
-\end{abstract}
-
-\begin{jkeyword}
-  Kuberanetes
-\end{jkeyword}
-
-\begin{eabstract}
-
 \end{eabstract}
 
 \begin{ekeyword}
-  Kuberanetes
+  Kuberanetes, public cloud, large-scale testbed
 \end{ekeyword}
 
 \maketitle
@@ -125,13 +136,94 @@ National Institute of Advanced Industrial Science and Technology}
 %1
 \section{はじめに}
 
+IoTセンサの普及に伴いセンサデータの爆発的増大が起こりつつある。
+このような状況においては、センサからクラウドへ直接情報を送信すると
+クラウドに過負荷がかかることが予想される。
+これに対してセンサとクラウドの中間にエッジと呼ばれる層を追加し、
+エッジとクラウドで適切に負荷を分散することで、クラウドに負荷が集中
+するのを抑制しようという試みが提案されている。
+我々は、このような試みの一貫として、センサからのデータをエッジで
+集約することでクラウドへの負荷を低減するシステムを提案し、
+その実現性を検討してきた\cite{tou-os}。
+
+しかしこのようなシステムの大規模な環境での評価は容易ではない。
+多数のノードから構成される実験環境を確立することは
+それ自体技術的にも経済的にも困難である。
+Grid5000\cite{grid5000}のような例はあるが、維持管理のコストは
+膨大で、持続可能ではない。
+
+SimGrid\cite{simgrid}などのシミュレータを利用する方法も考えられるが、
+多くのシミュレータはネットワークのみに着目しており、個々のノード上で
+動作するモジュールの過負荷を評価することはできない。
+
+我々はクラウド上のコンテナサービスを利用することで、テストベッドを
+構築する方法を提案する\cite{tou-hpc}。
+
+
+。オーケストレーションサービスを用いることで
+容易に短時間で大規模なテスト環境を構築できることを確認した。
+
+
 本稿の構成は以下のとおりである。
 
 \section{背景}\label{sec:background}
 
-\cite{MQTT}
+
+\subsection{MQTT}
+MQTT\cite{MQTT}は、Publish/Subscribeモデルに基づく軽量な通信プロトコルであり、広く普及している。
+MQTTの通信には、Publisher, Subscriber, Brokerの3者が関与し、Brokerを中心とした
+スター構造の通信トポロジをとる。
+Publisherはデータの送信者であり、特定のトピックを指定してBrokerにメッセージを送信する。
+Subscriberはデータの受信者であり、Brokerに対して特定のトピックに対する受信希望を行う。
+Brokerは、Publisherからのメッセージを受信すると、そのメッセージで指定されているトピック
+に対して受診希望を行っているSubscriberに、そのメッセージを送信する。
+Brokerを介することで多対多の柔軟な通信が可能となる。
+
+MQTTには3レベルのQoS(Quality of Service) が用意されている。Publisherは送信時にQoSを指定することができる。
+QoS 0はベストエフォートによる送信で、到達性は保証されない。つまりメッセージは途中で破棄される可能性がある。
+QoS 1はAt-least-once(少なくとも1回)の到達を保証する。再送を行うため受信通知が失われた場合には複数回
+メッセージが配送される可能性がある。
+QoS 2はexactly-once(厳密に1回)の到達を保証する。送信側が受信通知に反応するまでライブラリが
+メッセージをユーザに引き渡さないことによって、複数回の配送を抑制する。
 
 
+
+
+\subsection{Kubernates}
+
+\kbs\cite{k8s}は、複数のコンテナを管理するコンテナオーケストレータの一つで、
+デファクトスタンダードとして広く用いられている。
+多数のコンテナを集合として管理し、ダウンしたコンテナがあれば自動的に再起動
+する、セルフヒーリング機能を持つ。
+
+\kbs はコントロールプレーンとワーカーノードから構成される。
+コントロールプレーンには、ユーザからの入力を受け付けるAPIサーバや
+状態を管理するデータベースに相当するetcd、
+コンテナを実行するノードを決定するスケジューラが存在する。
+
+個々のワーカノードには複数のポッドを動作させる事ができる。
+ポッドは個別のIPアドレスを持つ単位で、
+ポッドの中にさらに複数のコンテナを持つ事ができる。
+この様子を\reffig{\kbs の構成}に示す。
+
+\subsubsection{ConfigMapとSecret}
+
+
+\subsection{Amazon EKS}
+\kbs はオンプレミス環境でも広く使用されているが、小規模な
+組織で運用するのはそれほど容易ではない。
+これに対してパブリッククラウド上で\kbs をサポートするサービスが
+登場している。
+%
+Amazon EKS(Elastic Kubernates Service)\cite{EKS}はその一つで、
+KubernatesをAmazonクラウド上で実行するサービスである。
+同様に、Google Computing Services にはGoogle Kubernetes Engine(GKE)\cite{gks}が、
+AzureにはAzure Kubernates Service(AKS)\cite{aks}が存在するが、
+本稿ではAmazon EKSを用いた。
+
+EKSではノードを通常のEC2上の仮想計算機もしくはFargate\cite{fargate}上
+に構築する。EKSをもちいることで、非常に大規模な実験環境を
+容易に管理運用することができる。
 
 
 
@@ -150,7 +242,6 @@ National Institute of Advanced Industrial Science and Technology}
 \begin{acknowledgment}
 本成果の一部は、国立研究開発法人新エネルギー・産業技術総合開発機構（NEDO）の「ポスト５Ｇ情報通信システム基盤強化研究開発事業」（JPNP20017）の委託事業の結果得られたものである。
 \end{acknowledgment}
-
 
 \bibliographystyle{ipsjunsrt}
 \bibliography{citation}
