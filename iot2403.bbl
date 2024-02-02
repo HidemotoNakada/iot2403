@@ -21,9 +21,6 @@ Casanova, H., Giersch, A., Legrand, A., Quinson, M. and Suter, F.: Versatile,
 董　允治，中田秀基，谷村勇輔\：ネットワークエッジを活用した大規模データ収集システムのテスト環境構築と最適化の検討，情報処理学会研究報告，Vol.~2022-HPC-191(11)
   (2023).
 
-\bibitem{MQTT}
-: MQTT: The Standard for IoT Messaging, \url{https://mqtt.org/}.
-
 \bibitem{k8s}
 : {Production-Grade Container Orchestration}, \url{https://kubernetes.io/}.
 
@@ -36,5 +33,8 @@ Casanova, H., Giersch, A., Legrand, A., Quinson, M. and Suter, F.: Versatile,
 
 \bibitem{fargate}
 : AWS Fargate, \url{https://aws.amazon.com/fargate/}.
+
+\bibitem{MQTT}
+: MQTT: The Standard for IoT Messaging, \url{https://mqtt.org/}.
 
 \end{thebibliography}
