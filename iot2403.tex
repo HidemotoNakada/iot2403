@@ -117,14 +117,18 @@ National Institute of Advanced Industrial Science and Technology}
 \end{jkeyword}
 
 \begin{eabstract}
-  IoTセンサの普及に伴いセンサデータの爆発的増大が想定される。このような環境では
-  エッジにおいて前処理を行うことでデータ量を低減するとともにクラウドでの処理を軽
-  減するアプローチが有効であると考えられる。このような環境で動作するミドルウェア
-  の負荷に対する特性を評価するには大規模なテストベッドが必要だが、実機でこのよう
-  なテストベッドを用意するのはさまざまな観点から現実的ではない。我々はクラウド上
-  のコンテナサービスを利用することで、テストベッドを構築する方法を提案する。オーケス
-  トレーションサービスを用いることで容易に短時間で大規模なテスト環境を構築できる
-  ことを確認した。
+  With the proliferation of IoT sensors,
+  an explosive increase in sensor data is expected. 
+  In such an environment, an approach that reduces the amount of 
+  data by pre-processing at the edge and reduces processing 
+  in the cloud is considered effective.
+  A large-scale testbed is necessary to evaluate the load characteristics 
+  of middleware running in such an environment, 
+  but preparing such a testbed on actual equipment is not 
+  realistic from various perspectives.
+  We propose a method to build a testbed by using container services in the public cloud.
+  We have confirmed that a large-scale test environment 
+  can be easily built in a short time by using an orchestration service.
 \end{eabstract}
 
 \begin{ekeyword}
@@ -159,10 +163,20 @@ SimGrid\cite{simgrid}などのシミュレータを利用する方法も考え�
 これに対して、我々はクラウド上のコンテナオーケストレーション
 サービスを利用することで、
 テストベッドを構築する方法を提案した\cite{tou-hpc}。
-
-
+本稿では、このアプローチをさらに進め、テストベッドの構築と破棄を自動化し、
+Jupyter Notebookから制御する方法を提案する。
+提案システムでは、パブリッククラウド上へのテスト環境の構築し、
+実験を実行し、テスト環境を破棄する作業を手元のPC環境から
+容易に行う事ができる。
 
 本稿の構成は以下のとおりである。
+\ref{sec:background}節では、本稿で用いる\kbs やAmazon EKS、
+テスト対象となるMQTTに関して説明する。
+\ref{sec:testbed}節では、提案システム上で構成するテストベッドについて
+概説する。
+\ref{sec:proposal}節で、提案システムの構成について説明し、
+\ref{sec:evaluation}節で評価を行う。
+\ref{sec:conclusion}節で本稿をまとめ、将来の課題を述べる。
 
 \section{背景}\label{sec:background}
 
@@ -179,6 +193,8 @@ SimGrid\cite{simgrid}などのシミュレータを利用する方法も考え�
 コントロールプレーンには、ユーザからの入力を受け付けるAPIサーバや
 状態を管理するデータベースに相当するetcd、
 コンテナを実行するノードを決定するスケジューラが存在する。
+
+\epsfig{figs/kubernetes.pdf}{width=8.5cm}{\kbs の概要}{kubernetes}
 
 個々のワーカノードには複数のポッドを動作させる事ができる。
 ポッドは個別のIPアドレスを持つ単位で、
@@ -205,6 +221,8 @@ KubernatesをAmazonクラウド上で実行するサービスである。
 AzureにはAzure Kubernates Service(AKS)\cite{aks}が存在するが、
 本稿ではAmazon EKSを用いた。
 
+\epsfig{figs/eks.pdf}{width=8.5cm}{Amazon EKS の概要}{eks}
+
 EKSではノードを通常のEC2上の仮想計算機もしくはFargate\cite{fargate}上
 に構築する。EKSをもちいることで、非常に大規模な実験環境を
 容易に管理運用することができる。
@@ -214,12 +232,14 @@ EKSではノードを通常のEC2上の仮想計算機もしくはFargate\cite{f
 \subsection{MQTT}
 MQTT\cite{MQTT}は、Publish/Subscribeモデルに基づく軽量な通信プロトコルであり、広く普及している。
 MQTTの通信には、Publisher, Subscriber, Brokerの3者が関与し、Brokerを中心とした
-スター構造の通信トポロジをとる。
+スター構造の通信トポロジをとる\reffig{mqtt}。
 Publisherはデータの送信者であり、特定のトピックを指定してBrokerにメッセージを送信する。
 Subscriberはデータの受信者であり、Brokerに対して特定のトピックに対する受信希望を行う。
 Brokerは、Publisherからのメッセージを受信すると、そのメッセージで指定されているトピック
 に対して受診希望を行っているSubscriberに、そのメッセージを送信する。
 Brokerを介することで多対多の柔軟な通信が可能となる。
+
+\epsfig{figs/mqtt.pdf}{width=6.0cm}{MQTTの概要}{mqtt}
 
 MQTTには3レベルのQoS(Quality of Service) が用意されている。Publisherは送信時にQoSを指定することができる。
 QoS 0はベストエフォートによる送信で、到達性は保証されない。つまりメッセージは途中で破棄される可能性がある。
@@ -234,25 +254,42 @@ QoS 2はexactly-once(厳密に1回)の到達を保証する。送信側が受信
 我々は膨大の数のセンサから得られる情報をクラウドに集積することに興味を持っている。
 これをナイーブに実装するとクラウドの負荷が非常に高くなることが予想される。
 これに対応するために、センサ群を地理的に局所性を持つグループに分割し、
-グループ内で一旦集積および集約してからクラウドに送信する方法が考えられる。
+グループ内で一旦集積および集約してからクラウドに送信する方法が考えられる(\reffig{continuum})。
+
+\epsfig{figs/proposed.pdf}{width=8.0cm}{超分散テストベッドの概要}{continuum}
+
+
+\section{提案システム}\label{sec:proposal}
 
 
 
+\epsfig{figs/experimental-setup.pdf}{width=8.0cm}{実験環境の構成}{setup}
 
-
+\section{評価}\label{sec:evaluation}
 
 \section{おわりに}\label{sec:conclusion}
-
+本稿では、大量のセンサデータを収集する超分散システムの評価を行うテストベッドを
+パブリッククラウド上のコンテナオーケストレーションサービスを用いることで
+自動化するシステムを提案した。
+本システムを用いることで、大規模な環境の実験が比較的容易に行えることを示した。
 
 今後の課題としては、以下が挙げられる。
 \begin{itemize}
-  \item hoge
+  \item より大規模な環境の実験\\
+  今回の実験では400センサーからなる環境の構築を行った。
+  より大規模な環境に対してもスケールすることを確認する。
+  
+  \item ネットワークのエミュレーション\\
+  提案システムのコンテナ間のネットワーク接続は、ネイティブの速度で動作するが、
+  より詳細な評価を行うにはネットワークのエミュレーションが必要になる。
+  例えば帯域制約やレイテンシのインジェクションなどを検討する。
+
 \end{itemize}
 
-
-
 \begin{acknowledgment}
-本成果の一部は、国立研究開発法人新エネルギー・産業技術総合開発機構（NEDO）の「ポスト５Ｇ情報通信システム基盤強化研究開発事業」（JPNP20017）の委託事業の結果得られたものである。
+本成果の一部は、国立研究開発法人新エネルギー・産業技術総合開発機構（NEDO）の
+「ポスト５Ｇ情報通信システム基盤強化研究開発事業」（JPNP20017）の
+委託事業の結果得られたものである。
 \end{acknowledgment}
 
 \bibliographystyle{ipsjunsrt}
