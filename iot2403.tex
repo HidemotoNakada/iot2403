@@ -113,7 +113,7 @@ National Institute of Advanced Industrial Science and Technology}
 \end{abstract}
 
 \begin{jkeyword}
-  Kubernetes, パブリッククラウド, 大規模テストベッド
+  \kbs, パブリッククラウド, 大規模テストベッド
 \end{jkeyword}
 
 \begin{eabstract}
@@ -121,18 +121,19 @@ National Institute of Advanced Industrial Science and Technology}
   an explosive increase in sensor data is expected. 
   In such an environment, an approach that reduces the amount of 
   data by pre-processing at the edge and reduces processing 
-  in the cloud is considered effective.
-  A large-scale testbed is necessary to evaluate the load characteristics 
-  of middleware running in such an environment, 
-  but preparing such a testbed on actual equipment is not 
-  realistic from various perspectives.
+  in the cloud is considered promissing.
+  To evaluate the characteristics and performance of the middleware
+  which works in such an environment requires large-scale testbeds.
+  Howerver, preparing such a testbed with actual computers and networks 
+  is not feasible in terms of cost.
   We propose a method to build a testbed by using container services in the public cloud.
   We have confirmed that a large-scale test environment 
-  can be easily built in a short time by using an orchestration service.
+  can be easily built in relatively short time 
+  by using an orchestration service.
 \end{eabstract}
 
 \begin{ekeyword}
-  Kuberanetes, public cloud, large-scale testbed
+  \kbs, public cloud, large-scale testbed
 \end{ekeyword}
 
 \maketitle
@@ -156,7 +157,8 @@ IoTセンサの普及に伴いセンサデータの爆発的増大が起こり�
 Grid5000\cite{grid5000}のような例はあるが、維持管理のコストは
 膨大で、持続可能ではない。
 %
-SimGrid\cite{simgrid}などのシミュレータを利用する方法も考えられるが、
+SimGrid\cite{simgrid}やGridSim\cite{GridSim}などの
+シミュレータを利用する方法も考えられるが、
 多くのシミュレータはネットワークのみに着目しており、個々のノード上で
 動作するモジュールの過負荷を評価することはできない。
 
@@ -210,7 +212,7 @@ Jupyter Notebook\cite{jupyternotebook}から制御する方法を提案する。
 この様子を\reffig{kubernetes}に示す。
 
 \kbs はさまざまなコンテナエンジンをサポートするが、
-本稿ではDockerを用いる。
+本稿ではDocker\cite{Docker}を用いる。
 
 \subsubsection{クライアントツール}
 \kbs ユーザはコントロールプレーンのAPIサーバに接続する
@@ -232,11 +234,16 @@ APIライブラリやUIツールも存在する。
 コンテナに対して起動時に外部から設定情報を与えることができる。
 
 
-\subsubsection{DaemonSet}
+\subsubsection{DaemonSetとDeployment}
 DaemonSetを用いると、すべて(もしくは一部)のノードで自動的に実行する
 ポッドを指定することができる。
 例えばログ収集やノードを監視するデーモンなどはすべてのノードで動作することが望ましい。
 このようなデーモンを実行するポッドを自動起動するものがDaemonSetである。
+
+Deploymentは同一のサービスのレプリカを複数起動するために用いられる。
+複数のレプリカをノードにまたがって起動することで負荷分散を行うことができる。
+また、耐故障性のためにも重要な機能である。
+
 
 \subsection{Amazon EKS}
 \kbs はオンプレミス環境でも広く使用されているが、小規模な
@@ -246,15 +253,16 @@ DaemonSetを用いると、すべて(もしくは一部)のノードで自動的
 %
 Amazon EKS(Elastic Kubernetes Service)\cite{EKS}はその一つで、
 KubernetesをAmazonクラウド上で実行するサービスである。
-同様に、Google Computing Services にはGoogle Kubernetes Engine(GKE)\cite{gks}が、
+同様に、Google Computing Services にはGoogle Kubernetes Engine(GKE)\cite{GKE}が、
 AzureにはAzure Kubernetes Service(AKS)\cite{aks}が存在するが、
 本稿ではAmazon EKSを用いた。
 
 \epsfig{figs/eks.pdf}{width=8.5cm}{Amazon EKS の概要}{eks}
 
 EKSではノードを通常のEC2上の仮想計算機もしくはFargate\cite{fargate}上
-に構築する。EKSをもちいることで、非常に大規模な実験環境を
-容易に管理運用することができる。
+に構築する。EKSを用いることで、非常に大規模な実験環境を
+容易に管理運用することができる。EKSの課金は1クラスタあたり1時間0.1ドルと安価である
+(もちろんワーカノードには別途課金される)。
 
 
 
@@ -327,7 +335,7 @@ CloudBrokerに対するSubscriber(Receiverと呼ぶ)が
   \item EdgeBrokerおよびCloudBroker
   \item Sensor 
   \item Relay
-  \item Receiber
+  \item Receiver
 \end{itemize}
 
 この様子を\reffig{setup}に示す。
@@ -343,7 +351,9 @@ CloudBrokerに対するSubscriber(Receiverと呼ぶ)が
 同じイメージで作成している)。
 
 また、Sensorの起動にはDeploymentを用いた。
-レプリカ数を指定することでノード内に指定した数のSensorを起動することができる。
+レプリカ数を指定することで同一のノード内に指定した数のSensorを起動することができる。
+このような利用方法は、Deploymentが本来意図したものではないが、
+管理は容易になる。
 
 
 \subsubsection{証明書の取り扱い}
@@ -366,11 +376,16 @@ TLSによる負荷の上昇だけを検証することがTLSを使用する目�
 ポッドでの共有には前述したSecretを使用した。
 
 \subsection{BrokerのIPアドレスの解決}
+Brokerにアクセスするためには、Brokerコンテナを
+ホストしているポッドのIPアドレスを取得する必要がある。
+ポッドのIPアドレスは自動的に採番されるため、ユーザが制御する事はできない。
 
-
+このため本システムではBrokerポッドを起動した後で、\kbs に問い合わせて
+ポッドのIPアドレスを取得し、その値を設定したポッドyamlファイルを動的に生成し、
+Sensorポッド等を起動している。
 
 \begin{figure}[tbp]
-  \renewcommand{\baselinestretch}{0.8}
+  \renewcommand{\baselinestretch}{0.9}
   \begin{lstlisting}
 apiVersion: apps/v1
 kind: DaemonSet
@@ -403,8 +418,6 @@ spec:
           /usr/sbin/mosquitto -c \
           /etc/mosquitto/mosquitto.conf
         ports:
-        - containerPort: 1883
-          protocol: TCP
         - containerPort: 8883
           protocol: TCP
   \end{lstlisting}
@@ -413,26 +426,44 @@ spec:
 \end{figure}
 
 
+\subsection{Brokerのyamlファイル}
+例として、Brokerに用いたyamlファイルの一部を\reffig{broker-yaml}に示す。
+2行目でDaemonSetを用いることを宣言している。
+20行目で使用するコンテナイメージを指定している。ここで指定する
+イメージはあらかじめDocker Hubにアップロードしておく必要がある。
+証明書をSecretに登録しているので、14-17行目でSecretのボリュームを指定し、
+21-23行目でそれを特定のパス(\verb|/etc/secrets/broker-certs|)に
+マウントしている。
+24-30行目でコンテナ内で起動するコマンドを指定している。
+ここではMQTTのブローカ実装であるMosquitto\cite{Mosquitto}を起動している。
+32-33行目で、外部からアクセスを受け付けるポートを指定している。
+8883はMQTTがSSL/TLSを用いた暗号化通信に用いる標準のポート番号である。
+
+
+
+
 
 \subsection{Amazon EKSでの実現}
 
-コンテナイメージの保存にはDocker Hub\cite{dockerhub}を用いる。
-実験環境の概要を\reffig{experiment}に示す。
-
 \epsfig{figs/experiment.pdf}{width=8.5cm}{実験の実行}{experiment}
 
-
 Amazon EKSに対する操作にはAmazonの提供するPython APIであるBoto3\cite{boto3}を
-使用した。また、
-\kbs のPython用API\cite{kubernetes-python-client}を使用して実装した。
+使用した。Amazon EKSのワーカノードを作成するには、EC2を用いる方法と
+fargateを用いる方法がある。今回はEC2を用いたため、事前にノードグループ
+と呼ばれるものを定義し、最大ノード数と最小ノード数を設定する必要がある。
+EKSが必要に応じてEC2インスタンスを起動してくれる。
 
+\kbs の操作は、\kbs のPython用API\cite{kubernetes-python-client}を
+使用して実装した。
+コンテナイメージの保存にはDocker Hub\cite{dockerhub}を用いる。
+実験環境の概要を\reffig{experiment}に示す。
 
 \subsection{実験の手順}
 実験の過程は以下のようになる。
 \begin{itemize}
   \item 実験を実行するコードを記述する。\\例えばSensorではメッセージを特定のトピックで送出し、Receiverは特定のトピックから受信する。RelayはEdgeBrokerからメッセージを受け取りそれを集積して、CloudBrokerに送出する。
   \item 上記の実験コードを含むコンテナイメージを作成しDocker Hubに登録する。
-  \item EKS環境を用意し、必要なノードを起動する。
+  \item 必要な数のノードを持つEKS環境を作成する。
   \item Jupyter Notebookに書かれた手順にしたがって、EKS上に実験環境をセットアップする。
   \item 実験が完了したらログを取得する。
   \item EKS上の実験環境を破棄する。
@@ -446,14 +477,18 @@ Amazon EKSに対する操作にはAmazonの提供するPython APIであるBoto3\
 本稿では、大量のセンサデータを収集する超分散システムの評価を行うテストベッドを
 パブリッククラウド上のコンテナオーケストレーションサービスを用いることで
 自動化するシステムを提案した。
-本システムを用いることで、大規模な環境の実験が比較的容易に行えることを示した。
+本システムを用いることで、大規模な環境の実験が比較的容易に行うことができることを示した。
 
 今後の課題としては、以下が挙げられる。
 \begin{itemize}
   \item より大規模な環境の実験\\
-  今回の実験では100センサーからなる環境の構築を行った。
+  これまでに100センサーからなる環境の構築をテストしている。
   より大規模な環境に対してもスケールすることを確認する。
   
+  \item \kbs クラスタ構成手法の見直し\\
+  現在のIPアドレスの設定手法は\kbs の外部で作業を行っており、
+  望ましくない。\kbs 内部で完結する手法を検討する必要がある。
+
   \item ネットワークのエミュレーション\\
   提案システムのコンテナ間のネットワーク接続は、ネイティブの速度で動作するが、
   より詳細な評価を行うにはネットワークのエミュレーションが必要になる。

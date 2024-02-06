@@ -27,6 +27,12 @@ Casanova, H., Giersch, A., Legrand, A., Quinson, M. and Suter, F.: Versatile,
   {\em Journal of Parallel and Distributed Computing},  Vol.~74, No.~10, pp.\
   2899--2917 (online), \urle{http://hal.inria.fr/hal-01017319} (2014).
 
+\bibitem{GridSim}
+Buyya, R. and Murshed, M.: GridSim: A Toolkit for the Modeling and Simulation
+  of Distributed Resource Management and Scheduling for Grid Computing, {\em
+  Concurrency and Computation: Practice and Experience},  Vol.~14 (online),
+  \doi{10.1002/cpe.710} (2002).
+
 \bibitem{tou-hpc}
 董　允治，中田秀基，谷村勇輔\：ネットワークエッジを活用した大規模データ収集システムのテスト環境構築と最適化の検討，情報処理学会研究報告，Vol.~2022-HPC-191(11)
   (2023).
@@ -44,8 +50,15 @@ Dong, Y., Nakada, H. and Tanimura, Y.: {Cloud-based Testbed for Large-scale
 : {Kubernetes: Production-Grade Container Orchestration},
   \url{https://kubernetes.io/}.
 
+\bibitem{Docker}
+: Docker, \url{https://www.docker.com/}.
+
 \bibitem{EKS}
 : {Amazon Elastic Kubernetes Service}, \url{https://aws.amazon.com/eks/}.
+
+\bibitem{GKE}
+: {Google Kubernetes Engine (GKE): The most scalable and fully automated
+  Kubernetes service}, \url{https://cloud.google.com/kubernetes-engine}.
 
 \bibitem{aks}
 : {Azure Kubernetes Service (AKS)},
@@ -57,8 +70,8 @@ Dong, Y., Nakada, H. and Tanimura, Y.: {Cloud-based Testbed for Large-scale
 \bibitem{MQTT}
 : MQTT: The Standard for IoT Messaging, \url{https://mqtt.org/}.
 
-\bibitem{dockerhub}
-: {Docker Hub: Develop faster. Run anywhere.}, \url{https://hub.docker.com/}.
+\bibitem{Mosquitto}
+: Eclipse Mosquitto, \url{https://mosquitto.org/}.
 
 \bibitem{boto3}
 : {Boto3 - The AWS SDK for Python}, \url{https://github.com/boto/boto3}.
@@ -66,5 +79,8 @@ Dong, Y., Nakada, H. and Tanimura, Y.: {Cloud-based Testbed for Large-scale
 \bibitem{kubernetes-python-client}
 : {Kubernetes Python Client},
   \url{https://github.com/kubernetes-client/python}.
+
+\bibitem{dockerhub}
+: {Docker Hub: Develop faster. Run anywhere.}, \url{https://hub.docker.com/}.
 
 \end{thebibliography}
