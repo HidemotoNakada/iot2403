@@ -182,16 +182,24 @@ Jupyter Notebookから制御する方法を提案する。
 
 
 
-\subsection{Kubernates}
-
+\subsection{\kbs}
+\subsubsection{\kbs の概要}
 \kbs\cite{k8s}は、複数のコンテナを管理するコンテナオーケストレータの一つで、
 デファクトスタンダードとして広く用いられている。
-多数のコンテナを集合として管理し、ダウンしたコンテナがあれば自動的に再起動
-する、セルフヒーリング機能を持つ。
+コンテナオーケストレータは、
+個別の機能を持つ多数の小さいサービスを組み合わせることで
+一つのアプリケーションを構成するマイクロサービスが普及とともに一般化した。
+コンテナとはアプリケーションもしくはサービスを、
+その依存する環境とともにパッケージしたものだ。
+コンテナオーケストレータは、
+このようなコンテナの集合を一体として管理監視し、起動終了を行う。
+たとえば、故障したコンテナがあれば、同じ機能を持つ別のコンテナを
+自動的に起動するセルフヒーリング機能を持つ。
 
 \kbs はコントロールプレーンとワーカーノードから構成される。
 コントロールプレーンには、ユーザからの入力を受け付けるAPIサーバや
 状態を管理するデータベースに相当するetcd、
+クラスタの情報を収集するコントロールマネージャ、
 コンテナを実行するノードを決定するスケジューラが存在する。
 
 \epsfig{figs/kubernetes.pdf}{width=8.5cm}{\kbs の概要}{kubernetes}
@@ -199,7 +207,22 @@ Jupyter Notebookから制御する方法を提案する。
 個々のワーカノードには複数のポッドを動作させる事ができる。
 ポッドは個別のIPアドレスを持つ単位で、
 ポッドの中にさらに複数のコンテナを持つ事ができる。
-この様子を\reffig{\kbs の構成}に示す。
+この様子を\reffig{kubernetes}に示す。
+
+\kbs はさまざまなコンテナエンジンをサポートするが、
+本稿ではDockerを用いる。
+
+\subsubsection{クライアントツール}
+\kbs ユーザはコントロールプレーンのAPIサーバに接続する
+何らかのクライアントツールを用いて、\kbs クラスタを制御する。
+コマンドラインツールの\verb|kubectl|がよく用いられるが、
+APIライブラリやUIツールも存在する。
+
+
+%\subsubsection{Deployment}
+%\kbs では1つのサービスのレプリカを複数個用意し、自動的に起
+%これをDeploymentと呼ぶ
+
 
 \subsubsection{ConfigMapとSecret}
 
@@ -207,6 +230,14 @@ Jupyter Notebookから制御する方法を提案する。
 これらが変更されるたびにコンテナイメージのリビルドが必要になり非効率である。
 \kbs では、ConfigMapとSecretと呼ばれる機能を用いることで、
 コンテナに対して起動時に外部から設定情報を与えることができる。
+
+
+\subsubsection{DaemonSet}
+DaemonSetを用いると、すべて(もしくは一部)のノードで自動的に実行する
+ポッドを指定することができる。
+例えばログ収集やノードを監視するデーモンなどはすべてのノードで動作することが望ましい。
+このようなデーモンを実行するポッドを自動起動するものがDaemonSetである。
+
 
 
 \subsection{Amazon EKS}
@@ -258,12 +289,96 @@ QoS 2はexactly-once(厳密に1回)の到達を保証する。送信側が受信
 
 \epsfig{figs/proposed.pdf}{width=8.0cm}{超分散テストベッドの概要}{continuum}
 
+この中間で集積するサーバを中継局が設置されるエッジに配置し、
+デバイス、エッジ、クラウドの3階層で情報を収集する。
+エッジで行う集約としては、単純にメッセージを集約してメッセージ数を減らすことや、
+平均値や最大最小値としてサマライズするなど、アプリケーションに応じて
+さまざまな方法が考えられる。
+
+
 
 \section{提案システム}\label{sec:proposal}
 
+\subsection{本稿で構築する環境の概要}
+本稿で提案するシステムの目的は、\ref{sec:testbed}節で述べた
+環境を擬似的にパブリッククラウド内に構築することである。
+
+具体的には、センサを模したPublisher(以降Sensorと呼ぶ)からの送信を中間層の
+Brokerでローカルに集約し、さらにクラウドを模した最終層のBrokerに集約する
+2段階の構成を考える
+一段目のBrokerをEdgeBroker、2段目のBrokerをCloudBrokerと呼ぶ。
+1つのEdgeBrokerが集約するSensorの数を$M$、
+EdgeBrokerの数を$N$とする。系全体としては $M \times N$個のSensorが
+存在することになる。
+EdgeBrokerの背後には、中継と集約を行うポッド(以下Relayと呼ぶ)を配置する。
+このRelayはEdgeBrokerに対してはSubscriberとして振る舞い、
+CloudBrokerに対してはPublisherとして振る舞う。
+つまり、EdgeBrokerからメッセージを受け取り、集約を行った後に
+CloudBrokerに送信する。
+CloudBrokerに対するSubscriber(Receiverと呼ぶ)が
+最終的にメッセージを受け取る。
+
+\subsection{\kbs へのマッピング}
+
+負荷分散のために、各エッジ環境を1つのノードを割り当てる。
+またクラウド環境にも1つのノードを割り当てる。
+エッジ環境は$N$個あるので、ノード数は $N+1$ となる。
+
+コンテナの種類としては、下記の4種類を用意した。
+\begin{itemize}
+  \item EdgeBrokerおよびCloudBroker
+  \item Sensor 
+  \item Relay
+  \item Receiber
+\end{itemize}
+
+この様子を\reffig{setup}に示す。
+エッジ環境のノードには、$M$個のSensorポッドとEdgeBrokerポッド、
+およびRelayポッドが動作する。
+クラウド環境ノードでは、CloudBrokerポッドとReceiverポッドが動作する。
+
+\epsfig{figs/experimental-setup.pdf}{width=8.5cm}{実験環境の構成}{setup}
 
 
-\epsfig{figs/experimental-setup.pdf}{width=8.0cm}{実験環境の構成}{setup}
+
+\begin{figure}[tbp]
+\renewcommand{\baselinestretch}{0.8}
+\begin{lstlisting}
+  apiVersion: apps/v1 
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+  spec:
+    selector:
+      matchLabels:
+        app: nginx
+    replicas: 2 
+    template:
+      metadata:
+        labels:
+          app: nginx
+      spec:
+        containers:
+        - name: nginx
+          image: nginx:1.14.2
+          ports:
+          - containerPort: 80
+\end{lstlisting}
+\caption{yamlファイル}
+\label{yaml}
+\end{figure}
+
+
+
+
+\subsection{実験の手順}
+\begin{itemize}
+  \item 実験を実行するコードを記述する。
+  \item それを含むコンテナイメージを作成しDockerhubに登録する。
+  \item EKS環境を用意し、必要なノードを起動する。
+  \item 実験を操作するnotebookを用意し、その中で
+\end{itemize}
+
 
 \section{評価}\label{sec:evaluation}
 

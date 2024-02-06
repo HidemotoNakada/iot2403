@@ -22,7 +22,8 @@ Casanova, H., Giersch, A., Legrand, A., Quinson, M. and Suter, F.: Versatile,
   (2023).
 
 \bibitem{k8s}
-: {Production-Grade Container Orchestration}, \url{https://kubernetes.io/}.
+: {Kubernetes: Production-Grade Container Orchestration},
+  \url{https://kubernetes.io/}.
 
 \bibitem{EKS}
 : {Amazon Elastic Kubernetes Service}, \url{https://aws.amazon.com/eks/}.
