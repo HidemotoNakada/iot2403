@@ -1,4 +1,14 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{10}
+
+\bibitem{iot}
+Yousef, A. and Fung, C.: All one needs to know about fog computing and related
+  edge computing paradigms: A complete survey, {\em Journal of Systems
+  Architecture},  Vol.~98, pp.\ 289--330 (2019).
+
+\bibitem{Edge-computing}
+Lopez, P.~G. and Montresor, A.: Edge-centric Computing: Vision and Challenges,
+  {\em ACM SIGCOMM Computer Communication Review},  Vol.~45, p.\ 37^^e2^^80^^93
+  (2015).
 
 \bibitem{tou-os}
 董　允治，中田秀基，谷村勇輔\：ネットワークエッジを活用したデータ収集システムに向けたMQTTの性能計測，情報処理学会研究報告，Vol.~2022-OS-158(12)
@@ -21,6 +31,15 @@ Casanova, H., Giersch, A., Legrand, A., Quinson, M. and Suter, F.: Versatile,
 董　允治，中田秀基，谷村勇輔\：ネットワークエッジを活用した大規模データ収集システムのテスト環境構築と最適化の検討，情報処理学会研究報告，Vol.~2022-HPC-191(11)
   (2023).
 
+\bibitem{tou-imcom}
+Dong, Y., Nakada, H. and Tanimura, Y.: {Cloud-based Testbed for Large-scale
+  data Collection System with Network-Edge}, {\em {Proceedings of IMCOM 2024,
+  the Annual International Conference on Ubiquitous Information Management and
+  Communication}} (2024).
+
+\bibitem{jupyternotebook}
+: {Jupyter Project}, \url{https://jupyter.org/}.
+
 \bibitem{k8s}
 : {Kubernetes: Production-Grade Container Orchestration},
   \url{https://kubernetes.io/}.
@@ -37,5 +56,15 @@ Casanova, H., Giersch, A., Legrand, A., Quinson, M. and Suter, F.: Versatile,
 
 \bibitem{MQTT}
 : MQTT: The Standard for IoT Messaging, \url{https://mqtt.org/}.
+
+\bibitem{dockerhub}
+: {Docker Hub: Develop faster. Run anywhere.}, \url{https://hub.docker.com/}.
+
+\bibitem{boto3}
+: {Boto3 - The AWS SDK for Python}, \url{https://github.com/boto/boto3}.
+
+\bibitem{kubernetes-python-client}
+: {Kubernetes Python Client},
+  \url{https://github.com/kubernetes-client/python}.
 
 \end{thebibliography}

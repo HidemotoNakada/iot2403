@@ -80,7 +80,7 @@
 %\setcounter{号数}{10}
 %\setcounter{page}{1}
 
-\newcommand{\kbs}{Kubernates}
+\newcommand{\kbs}{Kubernetes}
 
 \begin{document}
 
@@ -145,7 +145,7 @@ IoTセンサの普及に伴いセンサデータの爆発的増大が起こり�
 クラウドに過負荷がかかることが予想される。
 これに対してセンサとクラウドの中間にエッジと呼ばれる層を追加し、
 エッジとクラウドで適切に負荷を分散することで、クラウドに負荷が集中
-するのを抑制しようという試みが提案されている。
+するのを抑制しようという試みが提案されている\cite{iot}\cite{Edge-computing}。
 我々は、このような試みの一貫として、センサからのデータをエッジで
 集約することでクラウドへの負荷を低減するシステムを提案し、
 その実現性を検討してきた\cite{tou-os}。
@@ -162,9 +162,9 @@ SimGrid\cite{simgrid}などのシミュレータを利用する方法も考え�
 
 これに対して、我々はクラウド上のコンテナオーケストレーション
 サービスを利用することで、
-テストベッドを構築する方法を提案した\cite{tou-hpc}。
+テストベッドを構築する方法を提案した\cite{tou-hpc}\cite{tou-imcom}。
 本稿では、このアプローチをさらに進め、テストベッドの構築と破棄を自動化し、
-Jupyter Notebookから制御する方法を提案する。
+Jupyter Notebook\cite{jupyternotebook}から制御する方法を提案する。
 提案システムでは、パブリッククラウド上へのテスト環境を構築し、
 実験を実行し、テスト環境を破棄する作業を手元のPC環境から
 容易に行う事ができる。
@@ -175,7 +175,7 @@ Jupyter Notebookから制御する方法を提案する。
 \ref{sec:testbed}節では、提案システム上で構成するテストベッドについて
 概説する。
 \ref{sec:proposal}節で、提案システムの構成について説明し、
-\ref{sec:evaluation}節で評価を行う。
+%\ref{sec:evaluation}節で評価を行う。
 \ref{sec:conclusion}節で本稿をまとめ、将来の課題を述べる。
 
 \section{背景}\label{sec:background}
@@ -238,18 +238,16 @@ DaemonSetを用いると、すべて(もしくは一部)のノードで自動的
 例えばログ収集やノードを監視するデーモンなどはすべてのノードで動作することが望ましい。
 このようなデーモンを実行するポッドを自動起動するものがDaemonSetである。
 
-
-
 \subsection{Amazon EKS}
 \kbs はオンプレミス環境でも広く使用されているが、小規模な
 組織で運用するのはそれほど容易ではない。
 これに対してパブリッククラウド上で\kbs をサポートするサービスが
 登場している。
 %
-Amazon EKS(Elastic Kubernates Service)\cite{EKS}はその一つで、
-KubernatesをAmazonクラウド上で実行するサービスである。
+Amazon EKS(Elastic Kubernetes Service)\cite{EKS}はその一つで、
+KubernetesをAmazonクラウド上で実行するサービスである。
 同様に、Google Computing Services にはGoogle Kubernetes Engine(GKE)\cite{gks}が、
-AzureにはAzure Kubernates Service(AKS)\cite{aks}が存在するが、
+AzureにはAzure Kubernetes Service(AKS)\cite{aks}が存在するが、
 本稿ではAmazon EKSを用いた。
 
 \epsfig{figs/eks.pdf}{width=8.5cm}{Amazon EKS の概要}{eks}
@@ -270,7 +268,7 @@ Brokerは、Publisherからのメッセージを受信すると、そのメッ�
 に対して受診希望を行っているSubscriberに、そのメッセージを送信する。
 Brokerを介することで多対多の柔軟な通信が可能となる。
 
-\epsfig{figs/mqtt.pdf}{width=6.0cm}{MQTTの概要}{mqtt}
+\epsfig{figs/mqtt.pdf}{width=8.0cm}{MQTTの概要}{mqtt}
 
 MQTTには3レベルのQoS(Quality of Service) が用意されている。Publisherは送信時にQoSを指定することができる。
 QoS 0はベストエフォートによる送信で、到達性は保証されない。つまりメッセージは途中で破棄される可能性がある。
@@ -287,7 +285,7 @@ QoS 2はexactly-once(厳密に1回)の到達を保証する。送信側が受信
 これに対応するために、センサ群を地理的に局所性を持つグループに分割し、
 グループ内で一旦集積および集約してからクラウドに送信する方法が考えられる(\reffig{continuum})。
 
-\epsfig{figs/proposed.pdf}{width=8.0cm}{超分散テストベッドの概要}{continuum}
+\epsfig{figs/proposed.pdf}{width=8.5cm}{超分散テストベッドの概要}{continuum}
 
 この中間で集積するサーバを中継局が設置されるエッジに配置し、
 デバイス、エッジ、クラウドの3階層で情報を収集する。
@@ -339,48 +337,110 @@ CloudBrokerに対するSubscriber(Receiverと呼ぶ)が
 
 \epsfig{figs/experimental-setup.pdf}{width=8.5cm}{実験環境の構成}{setup}
 
+すべてのノードでEdgeBrokerもしくはCloudBrokerを動作させるので、
+ここではDaemonSetを用いている。これによってノードを起動させる
+だけで自動的にBrokerが立ち上がる(EdgeBrokerとCloudBrokerは
+同じイメージで作成している)。
+
+また、Sensorの起動にはDeploymentを用いた。
+レプリカ数を指定することでノード内に指定した数のSensorを起動することができる。
+
+
+\subsubsection{証明書の取り扱い}
+MQTTはTLS証明書に基づく認証と暗号化をサポートしており、
+インターネット環境で使用する際にはこれがデフォルトとなる。
+今回の実験ではクライアント認証は行わずサーバ(Broker)側のみで認証を行った。
+
+サーバ認証を行うには、サーバ側にはCA(Certificate Authority)の
+証明書とサーバの秘密鍵ファイルを、
+クライアント側にはCAの証明書を配置する必要がある。
+本来であれば秘密鍵ファイルをサーバから動かすことはできないため、
+外部にCAを設置し、サーバでCSRを作成してCAに送付し、
+CAで作成した証明書をサーバに送り返す、という手順が必要だが、これは煩雑である。
+
+クラウドに閉じた環境では実際にアクセスされる危険性はなく、
+TLSによる負荷の上昇だけを検証することがTLSを使用する目的であるため、
+今回は単純化した手続きを採用した。
+具体的には、手元のPC上にCAを作成し、そのCAを用いてサーバ証明書と秘密鍵のペアを
+1つだけ作り、それらをすべてのポッドで共有した。
+ポッドでの共有には前述したSecretを使用した。
+
+\subsection{BrokerのIPアドレスの解決}
+
 
 
 \begin{figure}[tbp]
-\renewcommand{\baselinestretch}{0.8}
-\begin{lstlisting}
-  apiVersion: apps/v1 
-  kind: Deployment
-  metadata:
-    name: nginx-deployment
-  spec:
-    selector:
-      matchLabels:
-        app: nginx
-    replicas: 2 
-    template:
-      metadata:
-        labels:
-          app: nginx
-      spec:
-        containers:
-        - name: nginx
-          image: nginx:1.14.2
-          ports:
-          - containerPort: 80
-\end{lstlisting}
-\caption{yamlファイル}
-\label{yaml}
+  \renewcommand{\baselinestretch}{0.8}
+  \begin{lstlisting}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: broker-pod
+spec:
+  selector:
+    matchLabels:
+      app: broker
+  template:
+    metadata:
+      labels:
+        app: broker
+    spec:
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: broker-certs
+      containers:
+      - name: broker-pod
+        image: XXXXX/YYYY:latest
+        volumeMounts:
+        - name: secret-volume
+          mountPath: /etc/secrets/broker-certs
+        command:
+          - /bin/sh
+          - -c
+          - >
+          中略
+          /usr/sbin/mosquitto -c \
+          /etc/mosquitto/mosquitto.conf
+        ports:
+        - containerPort: 1883
+          protocol: TCP
+        - containerPort: 8883
+          protocol: TCP
+  \end{lstlisting}
+  \caption{EdgeBroker兼CloudBrokerのyamlファイル}
+  \label{broker-yaml}
 \end{figure}
 
 
 
+\subsection{Amazon EKSでの実現}
+
+コンテナイメージの保存にはDocker Hub\cite{dockerhub}を用いる。
+実験環境の概要を\reffig{experiment}に示す。
+
+\epsfig{figs/experiment.pdf}{width=8.5cm}{実験の実行}{experiment}
+
+
+Amazon EKSに対する操作にはAmazonの提供するPython APIであるBoto3\cite{boto3}を
+使用した。また、
+\kbs のPython用API\cite{kubernetes-python-client}を使用して実装した。
+
 
 \subsection{実験の手順}
+実験の過程は以下のようになる。
 \begin{itemize}
-  \item 実験を実行するコードを記述する。
-  \item それを含むコンテナイメージを作成しDockerhubに登録する。
+  \item 実験を実行するコードを記述する。\\例えばSensorではメッセージを特定のトピックで送出し、Receiverは特定のトピックから受信する。RelayはEdgeBrokerからメッセージを受け取りそれを集積して、CloudBrokerに送出する。
+  \item 上記の実験コードを含むコンテナイメージを作成しDocker Hubに登録する。
   \item EKS環境を用意し、必要なノードを起動する。
-  \item 実験を操作するnotebookを用意し、その中で
+  \item Jupyter Notebookに書かれた手順にしたがって、EKS上に実験環境をセットアップする。
+  \item 実験が完了したらログを取得する。
+  \item EKS上の実験環境を破棄する。
+  \item EKS環境を破棄する。
 \end{itemize}
 
 
-\section{評価}\label{sec:evaluation}
+%\section{評価}\label{sec:evaluation}
 
 \section{おわりに}\label{sec:conclusion}
 本稿では、大量のセンサデータを収集する超分散システムの評価を行うテストベッドを
@@ -391,7 +451,7 @@ CloudBrokerに対するSubscriber(Receiverと呼ぶ)が
 今後の課題としては、以下が挙げられる。
 \begin{itemize}
   \item より大規模な環境の実験\\
-  今回の実験では400センサーからなる環境の構築を行った。
+  今回の実験では100センサーからなる環境の構築を行った。
   より大規模な環境に対してもスケールすることを確認する。
   
   \item ネットワークのエミュレーション\\
